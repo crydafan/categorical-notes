@@ -33,17 +33,19 @@ export function NoteForm({
   const [categoryInput, setCategoryInput] = useState("");
 
   useEffect(() => {
-    if (editingNote) {
-      setTitle(editingNote.title);
-      setContent(editingNote.content);
-      setCategories(editingNote.category || []);
-    } else {
-      setTitle("");
-      setContent("");
-      setCategories([]);
+    if (open) {
+      if (editingNote) {
+        setTitle(editingNote.title);
+        setContent(editingNote.content);
+        setCategories(editingNote.category || []);
+      } else {
+        setTitle("");
+        setContent("");
+        setCategories([]);
+      }
+      setCategoryInput("");
     }
-    setCategoryInput("");
-  }, [editingNote]);
+  }, [open, editingNote]);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();

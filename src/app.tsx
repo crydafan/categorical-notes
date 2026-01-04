@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthPage } from "@/pages/auth-page";
 import { NotesPage } from "@/pages/notes-page";
 import { ProtectedRoute } from "@/components/protected-route";
@@ -6,17 +6,14 @@ import { authService } from "@/services/auth.service";
 import "./index.css";
 
 export function App() {
+  const location = useLocation();
+  const isAuthenticated = authService.isAuthenticated();
+
   return (
     <Routes>
       <Route
         path="/auth"
-        element={
-          authService.isAuthenticated() ? (
-            <Navigate to="/" replace />
-          ) : (
-            <AuthPage />
-          )
-        }
+        element={isAuthenticated ? <Navigate to="/" replace /> : <AuthPage />}
       />
       <Route
         path="/"
