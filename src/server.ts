@@ -100,6 +100,159 @@ const server = serve({
         }
       },
     },
+
+    "/api/notes": {
+      async GET(req) {
+        const Authorization = req.headers.get("Authorization");
+        if (!Authorization) {
+          return new Response("Unauthorized", { status: 401 });
+        }
+
+        const token = Authorization.replace("Bearer ", "");
+
+        let payload = null;
+
+        try {
+          const result = await jose.jwtVerify(token, secret, {
+            algorithms: ["HS256"],
+          });
+          payload = result.payload;
+        } catch (e) {
+          return new Response("Unauthorized", { status: 401 });
+        }
+
+        const { sub } = payload as { sub: string };
+        const notes = await prisma.note.findMany({
+          where: {
+            userId: parseInt(sub),
+          },
+        });
+
+        return Response.json(notes);
+      },
+
+      async POST(req) {
+        const Authorization = req.headers.get("Authorization");
+        if (!Authorization) {
+          return new Response("Unauthorized", { status: 401 });
+        }
+
+        const token = Authorization.replace("Bearer ", "");
+
+        let payload = null;
+
+        try {
+          const result = await jose.jwtVerify(token, secret, {
+            algorithms: ["HS256"],
+          });
+          payload = result.payload;
+        } catch (e) {
+          return new Response("Unauthorized", { status: 401 });
+        }
+
+        const { title, content, category } = await req.json();
+        const { sub } = payload as { sub: string };
+
+        console.log(payload);
+
+        const note = await prisma.note.create({
+          data: {
+            title,
+            content,
+            category,
+            isArchived: false,
+            userId: parseInt(sub),
+          },
+        });
+
+        return Response.json(note);
+      },
+    },
+
+    "/api/notes/:id": {
+      async PUT(req) {
+        const Authorization = req.headers.get("Authorization");
+        if (!Authorization) {
+          return new Response("Unauthorized", { status: 401 });
+        }
+
+        const token = Authorization.replace("Bearer ", "");
+
+        let payload = null;
+
+        try {
+          const result = await jose.jwtVerify(token, secret, {
+            algorithms: ["HS256"],
+          });
+          payload = result.payload;
+        } catch (e) {
+          return new Response("Unauthorized", { status: 401 });
+        }
+
+        const { sub } = payload as { sub: string };
+        const id = parseInt(req.params.id);
+
+        if (isNaN(id)) {
+          return new Response("Invalid note ID", { status: 400 });
+        }
+
+        // Check if note exists and belongs to user
+        const existingNote = await prisma.note.findUnique({
+          where: { id, userId: parseInt(sub) },
+        });
+
+        if (!existingNote) {
+          return new Response("Note not found", { status: 404 });
+        }
+
+        const { title, content, category, isArchived } = await req.json();
+
+        const note = await prisma.note.update({
+          where: { id },
+          data: {
+            ...(title !== undefined && { title }),
+            ...(content !== undefined && { content }),
+            ...(category !== undefined && { category }),
+            ...(isArchived !== undefined && { isArchived }),
+          },
+        });
+
+        return Response.json(note);
+      },
+
+      async DELETE(req) {
+        const Authorization = req.headers.get("Authorization");
+        if (!Authorization) {
+          return new Response("Unauthorized", { status: 401 });
+        }
+
+        const token = Authorization.replace("Bearer ", "");
+
+        let payload = null;
+
+        try {
+          const result = await jose.jwtVerify(token, secret, {
+            algorithms: ["HS256"],
+          });
+          payload = result.payload;
+        } catch (e) {
+          return new Response("Unauthorized", { status: 401 });
+        }
+
+        const { sub } = payload as { sub: string };
+        const id = parseInt(req.params.id);
+
+        if (isNaN(id)) {
+          return new Response("Invalid note ID", { status: 400 });
+        }
+
+        await prisma.note.delete({
+          where: { id, userId: parseInt(sub) },
+        });
+
+        return new Response(null, { status: 204 });
+      },
+    },
   },
 
   development: process.env.NODE_ENV !== "production" && {

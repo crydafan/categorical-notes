@@ -3,11 +3,18 @@ import { authService } from "./auth.service";
 import { fetchWithRefresh } from "@/lib/fetch-with-refresh";
 
 // Helper to convert date strings to Date objects
-const parseNote = (note: Note): Note => ({
-  ...note,
-  createdAt: new Date(note.createdAt),
-  updatedAt: new Date(note.updatedAt),
-});
+const parseNote = (note: Note): Note => {
+  const decodedCategory =
+    typeof note.category === "string"
+      ? note.category.split(",").map((cat) => atob(cat))
+      : note.category;
+  return {
+    ...note,
+    category: decodedCategory,
+    createdAt: new Date(note.createdAt),
+    updatedAt: new Date(note.updatedAt),
+  };
+};
 
 // Helper to get auth headers
 const getAuthHeaders = () => {
@@ -43,10 +50,14 @@ export const noteService = {
 
   // Create a new note
   createNote: async (data: NoteFormData): Promise<Note> => {
+    const categories = data.category || [];
+    const encodedCategories = categories
+      .map((category) => btoa(category))
+      .join(",");
     const response = await fetchWithRefresh("/api/notes", {
       method: "POST",
       headers: getAuthHeaders(),
-      body: JSON.stringify(data),
+      body: JSON.stringify({ ...data, category: encodedCategories }),
     });
     if (!response.ok) throw new Error("Failed to create note");
     const note = await response.json();
@@ -58,10 +69,15 @@ export const noteService = {
     id: number,
     data: Partial<Omit<Note, "id" | "createdAt" | "updatedAt">>
   ): Promise<Note> => {
+    const categories = data.category || [];
+    const encodedCategories =
+      typeof categories === "string"
+        ? categories
+        : categories.map((category) => btoa(category)).join(",");
     const response = await fetchWithRefresh(`/api/notes/${id}`, {
       method: "PUT",
       headers: getAuthHeaders(),
-      body: JSON.stringify(data),
+      body: JSON.stringify({ ...data, category: encodedCategories }),
     });
     if (!response.ok) throw new Error("Failed to update note");
     const note = await response.json();
@@ -119,17 +135,5 @@ export const noteService = {
     );
 
     return noteService.updateNote(id, { category: categories });
-  },
-
-  // Get all unique categories
-  getAllCategories: async (): Promise<string[]> => {
-    const notes = await noteService.getAllNotes();
-    const categoriesSet = new Set<string>();
-
-    notes.forEach((note) => {
-      (note.category || []).forEach((category) => categoriesSet.add(category));
-    });
-
-    return Array.from(categoriesSet).sort();
   },
 };
