@@ -43,7 +43,7 @@ export function NoteForm({
       setCategories([]);
     }
     setCategoryInput("");
-  }, [editingNote, open]);
+  }, [editingNote]);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
