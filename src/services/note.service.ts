@@ -21,12 +21,9 @@ const getAuthHeaders = () => {
 export const noteService = {
   // Get all notes
   getAllNotes: async (): Promise<Note[]> => {
-    const response = await fetchWithRefresh(
-      `${import.meta.env.VITE_API_BASE_URL}/notes`,
-      {
-        headers: getAuthHeaders(),
-      }
-    );
+    const response = await fetchWithRefresh("/api/notes", {
+      headers: getAuthHeaders(),
+    });
     if (!response.ok) throw new Error("Failed to fetch notes");
     const notes = await response.json();
     return notes.map(parseNote);
@@ -46,14 +43,11 @@ export const noteService = {
 
   // Create a new note
   createNote: async (data: NoteFormData): Promise<Note> => {
-    const response = await fetchWithRefresh(
-      `${import.meta.env.VITE_API_BASE_URL}/notes`,
-      {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: JSON.stringify(data),
-      }
-    );
+    const response = await fetchWithRefresh("/api/notes", {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
     if (!response.ok) throw new Error("Failed to create note");
     const note = await response.json();
     return parseNote(note);
@@ -64,14 +58,11 @@ export const noteService = {
     id: number,
     data: Partial<Omit<Note, "id" | "createdAt" | "updatedAt">>
   ): Promise<Note> => {
-    const response = await fetchWithRefresh(
-      `${import.meta.env.VITE_API_BASE_URL}/notes/${id}`,
-      {
-        method: "PUT",
-        headers: getAuthHeaders(),
-        body: JSON.stringify(data),
-      }
-    );
+    const response = await fetchWithRefresh(`/api/notes/${id}`, {
+      method: "PUT",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
     if (!response.ok) throw new Error("Failed to update note");
     const note = await response.json();
     return parseNote(note);
@@ -79,13 +70,10 @@ export const noteService = {
 
   // Delete a note
   deleteNote: async (id: number): Promise<void> => {
-    const response = await fetchWithRefresh(
-      `${import.meta.env.VITE_API_BASE_URL}/notes/${id}`,
-      {
-        method: "DELETE",
-        headers: getAuthHeaders(),
-      }
-    );
+    const response = await fetchWithRefresh(`/api/notes/${id}`, {
+      method: "DELETE",
+      headers: getAuthHeaders(),
+    });
     if (!response.ok) throw new Error("Failed to delete note");
   },
 
@@ -101,12 +89,9 @@ export const noteService = {
 
   // Add category to a note
   addCategory: async (id: number, categoryToAdd: string): Promise<Note> => {
-    const response = await fetchWithRefresh(
-      `${import.meta.env.VITE_API_BASE_URL}/notes/${id}`,
-      {
-        headers: getAuthHeaders(),
-      }
-    );
+    const response = await fetchWithRefresh(`/api/notes/${id}`, {
+      headers: getAuthHeaders(),
+    });
     if (!response.ok) throw new Error("Failed to fetch note");
     const note = await response.json();
 
@@ -123,12 +108,9 @@ export const noteService = {
     id: number,
     categoryToRemove: string
   ): Promise<Note> => {
-    const response = await fetchWithRefresh(
-      `${import.meta.env.VITE_API_BASE_URL}/notes/${id}`,
-      {
-        headers: getAuthHeaders(),
-      }
-    );
+    const response = await fetchWithRefresh(`/api/notes/${id}`, {
+      headers: getAuthHeaders(),
+    });
     if (!response.ok) throw new Error("Failed to fetch note");
     const note = await response.json();
 

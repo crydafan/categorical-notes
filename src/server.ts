@@ -1,6 +1,7 @@
 import { serve } from "bun";
 import * as jose from "jose";
 import index from "./index.html";
+import { prisma } from "prisma/db";
 
 const secret = new TextEncoder().encode("super_secret_key");
 
@@ -13,9 +14,29 @@ const server = serve({
       async POST(req) {
         const { username, password } = await req.json();
 
-        // Validate credentials
+        const user = await prisma.user.findUnique({
+          where: { username },
+        });
 
-        const signJwt = new jose.SignJWT({ username }).setProtectedHeader({
+        // TODO: Return JSON response
+        if (!user) {
+          return new Response("Invalid username or password", { status: 401 });
+        }
+
+        const isPasswordValid = await Bun.password.verify(
+          password,
+          user.password
+        );
+
+        // TODO: Return JSON response
+        if (!isPasswordValid) {
+          return new Response("Invalid username or password", { status: 401 });
+        }
+
+        const signJwt = new jose.SignJWT({
+          sub: user.id.toString(),
+          username,
+        }).setProtectedHeader({
           alg: "HS256",
         });
 
@@ -30,9 +51,21 @@ const server = serve({
       async POST(req) {
         const { username, password } = await req.json();
 
-        // Create user
+        const hash = await Bun.password.hash(password);
 
-        const signJwt = new jose.SignJWT({ username }).setProtectedHeader({
+        const user = await prisma.user.create({
+          data: {
+            username,
+            password: hash,
+          },
+        });
+
+        // TODO: Error handling
+
+        const signJwt = new jose.SignJWT({
+          sub: user.id.toString(),
+          username,
+        }).setProtectedHeader({
           alg: "HS256",
         });
 
