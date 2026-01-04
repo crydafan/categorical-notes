@@ -23,7 +23,7 @@ const addRefreshSubscriber = (callback: (token: string) => void) => {
 export const authService = {
   // Sign in user
   signIn: async (credentials: AuthCredentials): Promise<AuthResponse> => {
-    const response = await fetch("/auth/sign-in", {
+    const response = await fetch("/api/auth/sign-in", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -43,7 +43,7 @@ export const authService = {
 
   // Sign up user
   signUp: async (credentials: AuthCredentials): Promise<AuthResponse> => {
-    const response = await fetch("/auth/sign-up", {
+    const response = await fetch("/api/auth/sign-up", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -80,7 +80,7 @@ export const authService = {
     isRefreshing = true;
 
     try {
-      const response = await fetch("/auth/refresh", {
+      const response = await fetch("/api/auth/refresh", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
