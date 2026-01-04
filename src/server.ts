@@ -122,12 +122,18 @@ const server = serve({
         }
 
         const { sub } = payload as { sub: string };
-        const notes = await prisma.note.findMany({
+        const notesData = await prisma.note.findMany({
           where: {
             userId: parseInt(sub),
           },
         });
 
+        const notes = notesData.map((note) => {
+          const categories = note.category
+            .split(",")
+            .map((category) => atob(category));
+          return { ...note, category: categories };
+        });
         return Response.json(notes);
       },
 
@@ -150,16 +156,22 @@ const server = serve({
           return new Response("Unauthorized", { status: 401 });
         }
 
-        const { title, content, category } = await req.json();
+        const { title, content, category } = (await req.json()) as {
+          title: string;
+          content: string;
+          category: string[];
+        };
         const { sub } = payload as { sub: string };
 
-        console.log(payload);
+        const encodedCategories = category
+          .map((category) => btoa(category))
+          .join(",");
 
         const note = await prisma.note.create({
           data: {
             title,
             content,
-            category,
+            category: encodedCategories,
             isArchived: false,
             userId: parseInt(sub),
           },
@@ -205,14 +217,25 @@ const server = serve({
           return new Response("Note not found", { status: 404 });
         }
 
-        const { title, content, category, isArchived } = await req.json();
+        const { title, content, category, isArchived } = (await req.json()) as {
+          title?: string;
+          content?: string;
+          category?: string[];
+          isArchived?: boolean;
+        };
+
+        const encodedCategories = category
+          ? category.map((cat) => btoa(cat)).join(",")
+          : undefined;
 
         const note = await prisma.note.update({
           where: { id },
           data: {
             ...(title !== undefined && { title }),
             ...(content !== undefined && { content }),
-            ...(category !== undefined && { category }),
+            ...(encodedCategories !== undefined && {
+              category: encodedCategories,
+            }),
             ...(isArchived !== undefined && { isArchived }),
           },
         });

@@ -2,7 +2,7 @@ export interface Note {
   id: number;
   title: string;
   content: string;
-  category: string[] | string; // TODO: Fix string type when migrating existing notes
+  category: string[];
   isArchived: boolean;
   createdAt: Date | string;
   updatedAt: Date | string;
